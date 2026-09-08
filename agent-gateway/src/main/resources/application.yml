@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: agent-gateway
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/medical_system}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  shutdown: graceful
+
+security:
+  access-token:
+    secret: ${GATEWAY_ACCESS_TOKEN_SECRET:}
+    ttl-seconds: ${GATEWAY_ACCESS_TOKEN_TTL_SECONDS:900}
+  refresh-token:
+    ttl-seconds: ${GATEWAY_REFRESH_TOKEN_TTL_SECONDS:1209600}
+  service-callback:
+    secret: ${GATEWAY_SERVICE_TOKEN_SECRET:}
+
+app:
+  demo-bootstrap:
+    enabled: ${DEMO_BOOTSTRAP_ENABLED:false}
+    admin-username: ${DEMO_ADMIN_USERNAME:}
+    admin-password: ${DEMO_ADMIN_PASSWORD:}
+    user-username: ${DEMO_USER_USERNAME:}
+    user-password: ${DEMO_USER_PASSWORD:}
+  agent-core:
+    base-url: ${AGENT_CORE_URL:http://localhost:8000}
+  storage:
+    # spring-boot:run uses agent-gateway/ as its working directory.  Keep the
+    # default aligned with Agent Core's repository-root data/uploads directory.
+    root: ${MEDICAL_STORAGE_ROOT:${user.dir}/../data/uploads}

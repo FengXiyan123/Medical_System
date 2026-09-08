@@ -1,0 +1,125 @@
+services:
+  mysql:
+    image: mysql:8.0.45
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-medical_system}
+      MYSQL_USER: ${MYSQL_USER:-medical_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me-local}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root}
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-medical_vector}
+      POSTGRES_USER: ${POSTGRES_USER:-medical_vector_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-vector}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  redis:
+    image: redis:6.0.8-alpine
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  agent-core:
+    build:
+      context: ./agent-core
+    environment:
+      MODEL_MODE: ${MODEL_MODE:-mock}
+      DASHSCOPE_REGION: ${DASHSCOPE_REGION:-cn-beijing}
+      DASHSCOPE_WORKSPACE_ID: ${DASHSCOPE_WORKSPACE_ID:-}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      GATEWAY_SERVICE_TOKEN_SECRET: ${GATEWAY_SERVICE_TOKEN_SECRET:-}
+      GATEWAY_BASE_URL: http://gateway:8080
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-medical_vector}
+      POSTGRES_USER: ${POSTGRES_USER:-medical_vector_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-vector}
+      REDIS_URL: redis://redis:6379/0
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      MEDICAL_STORAGE_ROOT: /data/uploads
+      INGESTION_WORKER_ENABLED: "true"
+    ports:
+      - "127.0.0.1:${AGENT_CORE_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads-data:/data/uploads
+
+  gateway:
+    build:
+      context: .
+      dockerfile: agent-gateway/Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-medical_system}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-medical_app}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-change-me-local}
+      GATEWAY_ACCESS_TOKEN_SECRET: ${GATEWAY_ACCESS_TOKEN_SECRET:-}
+      GATEWAY_SERVICE_TOKEN_SECRET: ${GATEWAY_SERVICE_TOKEN_SECRET:-}
+      AGENT_CORE_URL: http://agent-core:8000
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      MEDICAL_STORAGE_ROOT: /data/uploads
+      DEMO_BOOTSTRAP_ENABLED: ${DEMO_BOOTSTRAP_ENABLED:-true}
+      DEMO_ADMIN_USERNAME: ${DEMO_ADMIN_USERNAME:-admin}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-admin}
+      DEMO_USER_USERNAME: ${DEMO_USER_USERNAME:-user}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-user}
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      agent-core:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads-data:/data/uploads
+
+  web:
+    build:
+      context: .
+      dockerfile: vue/Dockerfile
+    ports:
+      - "127.0.0.1:${WEB_PORT:-5173}:80"
+    depends_on:
+      gateway:
+        condition: service_started
+
+volumes:
+  mysql-data:
+  postgres-data:
+  redis-data:
+  uploads-data:

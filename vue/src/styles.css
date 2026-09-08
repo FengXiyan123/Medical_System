@@ -1,0 +1,77 @@
+:root {
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #173937;
+  background: #eef4f1;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #173937;
+  --muted: #627a75;
+  --brand-950: #103d3c;
+  --brand-900: #0d4c49;
+  --brand-800: #12655e;
+  --brand-700: #15786e;
+  --brand-100: #dff3ed;
+  --brand-50: #f4fbf8;
+  --line: #dbe8e3;
+  --surface: #ffffff;
+  --surface-soft: #f7fbf9;
+  --danger: #b42318;
+  --danger-soft: #fff1ef;
+  --warning: #a85c00;
+  --warning-soft: #fff6e7;
+  --success: #167064;
+  --success-soft: #e5f7f1;
+  --shadow: 0 20px 50px rgb(24 59 54 / 9%);
+}
+
+* { box-sizing: border-box; }
+html { min-width: 320px; min-height: 100%; background: #eef4f1; }
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  font-size: 1rem;
+  background:
+    radial-gradient(circle at 8% 3%, rgb(98 184 164 / 19%), transparent 24rem),
+    radial-gradient(circle at 96% 16%, rgb(202 234 221 / 72%), transparent 24rem),
+    linear-gradient(135deg, #f6faf8 0%, #edf5f1 47%, #e5f0ec 100%);
+}
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid rgb(45 151 133 / 34%);
+  outline-offset: 2px;
+}
+button:disabled { cursor: not-allowed; }
+a { color: inherit; }
+h1, h2, h3, h4, p { margin-top: 0; }
+input, textarea, select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: .72rem .85rem;
+  color: var(--ink);
+  background: #fff;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+input::placeholder, textarea::placeholder { color: #91a5a0; }
+input:hover, textarea:hover, select:hover { border-color: #b8d1c9; }
+input:focus, textarea:focus, select:focus {
+  border-color: var(--brand-700);
+  box-shadow: 0 0 0 4px rgb(21 120 110 / 11%);
+  outline: 0;
+}
+textarea { line-height: 1.65; resize: vertical; }
+table { width: 100%; border-collapse: collapse; }
+th { color: var(--muted); font-weight: 700; background: #f6faf8; }
+th, td { padding: .78rem .75rem; border-bottom: 1px solid #e6efeb; text-align: left; vertical-align: top; }
+code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+.error { color: var(--danger) !important; }
+.notice { color: var(--success) !important; }
+.state, .empty { color: var(--muted); }
+
+@media (max-width: 720px) {
+  :root { font-size: 16px; }
+}
